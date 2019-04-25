@@ -14,6 +14,9 @@ public class JmsConfig {
     private static final String BROKER_PASSWORD = "admin";
 
     public static final String PUBLISH_SUBSCRIBE_CHANNEL = "publish-subscribe-channel";
+    public static final String CAR_REPLY_CHANNEL = "car-reply-channel";
+    public static final String MECHANICS_TEAM_CHANNEL = "mechanics-team-channel";
+    public static final String TEAM_MANAGER_CHANNEL = "team-manager-channel";
 
     @Bean
     public ActiveMQConnectionFactory connectionFactory() {
@@ -26,9 +29,18 @@ public class JmsConfig {
     }
 
     @Bean
-    public JmsTemplate jmsTemplate() {
+    public JmsTemplate jmsQueueTemplate() {
         JmsTemplate template = new JmsTemplate();
         template.setConnectionFactory(connectionFactory());
+        template.setPubSubDomain(false);
+        return template;
+    }
+
+    @Bean
+    public JmsTemplate jmsTopicTemplate() {
+        JmsTemplate template = new JmsTemplate();
+        template.setConnectionFactory(connectionFactory());
+        template.setPubSubDomain(true);
         return template;
     }
 
@@ -37,6 +49,7 @@ public class JmsConfig {
         DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory());
         factory.setConcurrency("1-1");
+        factory.setPubSubDomain(false);
         return factory;
     }
 

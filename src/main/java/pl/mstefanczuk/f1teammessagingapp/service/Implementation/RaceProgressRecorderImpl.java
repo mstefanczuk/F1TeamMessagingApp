@@ -45,9 +45,9 @@ public class RaceProgressRecorderImpl implements RaceProgressRecorder {
     }
 
     private String getFormattedCurrentTime(long milliseconds) {
-        int seconds = (int) (milliseconds / 1000) % 60 ;
-        int minutes = (int) ((milliseconds / (1000*60)) % 60);
-        int hours   = (int) ((milliseconds / (1000*60*60)) % 24);
+        int seconds = (int) (milliseconds / 1000) % 60;
+        int minutes = (int) ((milliseconds / (1000 * 60)) % 60);
+        int hours = (int) ((milliseconds / (1000 * 60 * 60)) % 24);
 
         return hours + ":" + minutes + ":" + seconds;
     }

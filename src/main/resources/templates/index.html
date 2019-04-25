@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div>
+    <h3>BOLID</h3>
+</div>
+<form method="post" th:object="${carInfo}">
+    <div>
+        <label for="engineTemperature">Temperatura silnika:</label>
+        <input id="engineTemperature" type="text" name="engineTemperature" th:value="*{engineTemperature}"/>
+    </div>
+    <div>
+        <label for="oilPressure">Ciśnienie oleju:</label>
+        <input id="oilPressure" type="text" name="oilPressure" th:value="*{oilPressure}"/>
+    </div>
+    <div>
+        <label for="tyrePressure">Ciśnienie w oponach:</label>
+        <input id="tyrePressure" type="text" name="tyrePressure" th:value="*{tyrePressure}"/>
+    </div>
+    <div>
+        <input type="submit" value="Zapisz parametry"/>
+    </div>
+</form>
+<a class="btn" href="/pitstop-request">Zgłoś potrzebę zjazdu do pit-stopu</a>
+</body>
+</html>
