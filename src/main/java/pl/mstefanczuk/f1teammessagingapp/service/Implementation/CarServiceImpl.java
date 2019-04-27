@@ -1,5 +1,8 @@
 package pl.mstefanczuk.f1teammessagingapp.service.Implementation;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTextMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jms.annotation.JmsListener;
@@ -7,11 +10,12 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import pl.mstefanczuk.f1teammessagingapp.config.JmsConfig;
-import pl.mstefanczuk.f1teammessagingapp.model.Request;
 import pl.mstefanczuk.f1teammessagingapp.model.CarInfo;
 import pl.mstefanczuk.f1teammessagingapp.service.CarService;
 
 import javax.annotation.PostConstruct;
+import javax.jms.*;
+import java.util.Random;
 
 @Service
 public class CarServiceImpl implements CarService {
@@ -19,15 +23,15 @@ public class CarServiceImpl implements CarService {
     private CarInfo carInfo;
     private long startTime;
 
-    private final JmsTemplate jmsQueueTemplate;
-
     private final JmsTemplate jmsTopicTemplate;
 
+    private final ActiveMQConnectionFactory activeMQConnectionFactory;
+
     @Autowired
-    public CarServiceImpl(@Qualifier("jmsQueueTemplate") JmsTemplate jmsQueueTemplate,
-                          @Qualifier("jmsTopicTemplate") JmsTemplate jmsTopicTemplate) {
-        this.jmsQueueTemplate = jmsQueueTemplate;
+    public CarServiceImpl(@Qualifier("jmsTopicTemplate") JmsTemplate jmsTopicTemplate,
+                          ActiveMQConnectionFactory activeMQConnectionFactory) {
         this.jmsTopicTemplate = jmsTopicTemplate;
+        this.activeMQConnectionFactory = activeMQConnectionFactory;
     }
 
     @Override
@@ -41,10 +45,10 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
-    @Scheduled(fixedRate = 15000)
+    @Scheduled(fixedRate = 5000)
     public void publishCarInfo() {
         setCurrentTime();
-        jmsTopicTemplate.convertAndSend(JmsConfig.PUBLISH_SUBSCRIBE_CHANNEL, carInfo);
+        jmsTopicTemplate.convertAndSend(JmsConfig.CAR_INFO_CHANNEL, carInfo);
     }
 
     @Override
@@ -65,7 +69,32 @@ public class CarServiceImpl implements CarService {
     public void requestForPitstop() {
         System.out.println("\n-- BOLID --");
         System.out.println("Zgłaszanie potrzeby zjazdu do pit-stopu");
-        jmsQueueTemplate.convertAndSend(JmsConfig.TEAM_MANAGER_CHANNEL, Request.PITSTOP);
+
+        try {
+            Connection connection = activeMQConnectionFactory.createConnection();
+            connection.start();
+
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+            Destination destination = new ActiveMQQueue(JmsConfig.TEAM_MANAGER_CHANNEL);
+            MessageProducer producer = session.createProducer(destination);
+
+            Destination replyDestination = session.createTemporaryQueue();
+
+            TextMessage message = session.createTextMessage("pit-stop-request");
+            message.setJMSReplyTo(replyDestination);
+            message.setJMSCorrelationID(Long.toHexString(new Random(System.currentTimeMillis()).nextLong()));
+            producer.send(message);
+
+            MessageConsumer consumer = session.createConsumer(replyDestination);
+            ActiveMQTextMessage reply = (ActiveMQTextMessage) consumer.receive();
+            System.out.println("ODPOWIEDŹ: " + reply.getText());
+
+            session.close();
+            connection.close();
+        } catch (JMSException e) {
+            e.printStackTrace();
+        }
     }
 
     private void setCurrentTime() {

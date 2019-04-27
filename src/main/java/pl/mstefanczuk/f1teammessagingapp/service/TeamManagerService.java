@@ -1,8 +1,8 @@
 package pl.mstefanczuk.f1teammessagingapp.service;
 
-import pl.mstefanczuk.f1teammessagingapp.model.Request;
+import javax.jms.TextMessage;
 
 public interface TeamManagerService {
 
-    String receiveRequest(Request request);
+    void receiveRequest(TextMessage message);
 }

@@ -20,7 +20,7 @@ public class MonitoringServiceImpl implements MonitoringService {
     }
 
     @Override
-    @JmsListener(destination = JmsConfig.PUBLISH_SUBSCRIBE_CHANNEL, containerFactory = "jmsTopicListenerContainerFactory")
+    @JmsListener(destination = JmsConfig.CAR_INFO_CHANNEL, containerFactory = "jmsTopicListenerContainerFactory")
     public void receiveCarInfo(final CarInfo carInfo) {
         String replyMessage = "";
         String messageForMechanicsTeam = "";
